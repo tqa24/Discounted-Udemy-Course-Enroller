@@ -23,7 +23,7 @@ from rich.traceback import install as rich_traceback_install
 
 rich_traceback_install()
 
-VERSION = "v2.3.4"
+VERSION = "v2.3.5"
 
 if getattr(sys, 'frozen', False):
     # PyInstaller creates a temp folder and stores path in _MEIPASS
