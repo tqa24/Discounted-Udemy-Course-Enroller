@@ -244,6 +244,12 @@ class Scraper:
             except requests.exceptions.ConnectionError as e:
                 logger.error(f"Connection error occurred: {url} - {str(e)}")
                 time.sleep(3.5)
+            except requests.exceptions.Timeout as e:
+                logger.error(f"Timeout error occurred: {url} - {str(e)}")
+                time.sleep(3.5)
+            except requests.exceptions.SSLError as e:
+                logger.error(f"SSL error occurred: {url} - {str(e)}")
+                time.sleep(3.5)
     def parse_html(self, content: str):
         return bs(content, "lxml")
 
