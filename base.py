@@ -44,7 +44,7 @@ scraper_dict: dict = {
     "Real Discount": "rd",
     "Courson": "cxyz",
     "IDownloadCoupons": "idc",
-    "Tutorial Bar": "tb",
+    # "Tutorial Bar": "tb",
     "E-next": "en",
     "Discudemy": "du",
     "Udemy Freebies": "uf",
@@ -238,8 +238,12 @@ class Scraper:
         target.append(course)
 
     def fetch_page(self, url: str, headers: dict = None) -> requests.Response:
-        return requests.get(url, headers=headers, timeout=(30, 30))
-
+        for _ in range(3):
+            try:
+                return requests.get(url, headers=headers, timeout=(30, 30))
+            except requests.exceptions.ConnectionError as e:
+                logger.error(f"Connection error occurred: {url} - {str(e)}")
+                time.sleep(3.5)
     def parse_html(self, content: str):
         return bs(content, "lxml")
 
@@ -258,7 +262,7 @@ class Scraper:
     def cleanup_link(self, link: str) -> str:
         parsed_url = urlparse(link)
 
-        if parsed_url.netloc == "www.udemy.com" or parsed_url.netloc == "udemy.com":
+        if parsed_url.netloc.lower() == "www.udemy.com" or parsed_url.netloc.lower() == "udemy.com":
             return link
 
         if parsed_url.netloc == "click.linksynergy.com":
@@ -534,17 +538,24 @@ class Scraper:
                 """Helper method to fetch course details"""
                 title = item["title"]["rendered"]
                 link_num = item["id"]
-                if link_num == "85":
+                if link_num in [85, 81]:
                     return None, None
                 link = f"https://idownloadcoupon.com/udemy/{link_num}/"
                 r = requests.get(
                     link,
                     allow_redirects=False,
                 )
-                if "comidoc.net" in link:
+                if "comidoc.net" in link or "comidoc.com" in link:
                     logger.info("Comidoc link: " + link)
                     return None, None
-                link = unquote(r.headers["Location"])
+                try:
+                    link = unquote(r.headers["Location"])
+                except KeyError:
+                    logger.error(f"No Location header found for {link}")
+                    return None, None
+                if  "comidoc.com" in link:
+                    logger.info("Comidoc link: " + link)
+                    return None, None
                 link = self.cleanup_link(link)
                 return title, link
 
@@ -816,15 +827,18 @@ class Udemy:
         return 0
 
     def check_for_update(self) -> tuple[str, str]:
-        r_version = (
-            requests.get(
+        logger.info("Checking for updates...")
+        r_version = requests.get(
                 "https://api.github.com/repos/techtanic/Discounted-Udemy-Course-Enroller/releases/latest"
             )
-            .json()["tag_name"]
-            .removeprefix("v")
-        )
+        
+        if r_version.status_code != 200:
+            logger.error("Failed to fetch latest version info")
+            return ("Login " + VERSION, "Discounted-Udemy-Course-Enroller " + VERSION)
+        r_version = r_version.json()
+        r_version = r_version["tag_name"].removeprefix("v")
         c_version = VERSION.removeprefix("v")
-
+        logger.info(f"Current version: {c_version}, Latest version: {r_version}")
         comparison = self.compare_versions(c_version, r_version)
 
         if comparison == -1:

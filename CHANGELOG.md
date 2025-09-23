@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.3.5
+- Fixed `IDownloadCoupons`
+
+
 ## v2.3.4
 
 - Remove unnecessary key bindings from login window
