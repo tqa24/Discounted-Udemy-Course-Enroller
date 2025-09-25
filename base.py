@@ -23,7 +23,7 @@ from rich.traceback import install as rich_traceback_install
 
 rich_traceback_install()
 
-VERSION = "v2.3.5"
+VERSION = "v2.3.6"
 
 
 def get_user_data_path(filename):
