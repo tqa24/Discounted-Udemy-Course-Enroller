@@ -25,15 +25,26 @@ rich_traceback_install()
 
 VERSION = "v2.3.5"
 
-if getattr(sys, 'frozen', False):
-    # PyInstaller creates a temp folder and stores path in _MEIPASS
-    if hasattr(sys, '_MEIPASS'):
-        bundle_dir = sys._MEIPASS
-    else:
-        bundle_dir = os.path.dirname(sys.executable)
-    os.chdir(bundle_dir)
 
-log_file_path = "duce.log"
+def get_user_data_path(filename):
+    """Get the path for user data files """
+    if getattr(sys, 'frozen', False):
+        # If running as PyInstaller exe, put user data files next to the executable
+        return os.path.join(os.path.dirname(sys.executable), filename)
+    else:
+        # If running as script, put files in current directory
+        return os.path.join(os.path.abspath("."), filename)
+
+
+# if getattr(sys, 'frozen', False):
+#     # PyInstaller creates a temp folder and stores path in _MEIPASS
+#     if hasattr(sys, '_MEIPASS'):
+#         bundle_dir = sys._MEIPASS
+#     else:
+#         bundle_dir = os.path.dirname(sys.executable)
+#     os.chdir(bundle_dir)
+
+log_file_path = get_user_data_path("duce.log")
 
 
 logger.remove()
@@ -781,8 +792,9 @@ class Udemy:
         return datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
 
     def load_settings(self):
+        settings_file = get_user_data_path(f"duce-{self.interface}-settings.json")
         try:
-            with open(f"duce-{self.interface}-settings.json") as f:
+            with open(settings_file) as f:
                 self.settings = json.load(f)
         except FileNotFoundError:
             with open(
@@ -815,7 +827,8 @@ class Udemy:
         self.instructor_exclude = "\n".join(self.settings["instructor_exclude"])
 
     def save_settings(self):
-        with open(f"duce-{self.interface}-settings.json", "w") as f:
+        settings_file = get_user_data_path(f"duce-{self.interface}-settings.json")
+        with open(settings_file, "w") as f:
             json.dump(self.settings, f, indent=4)
 
     def compare_versions(self, version1, version2):
