@@ -1,5 +1,8 @@
 # Changelog
 
+## v2.3.6
+- Fix settings and log file not saving
+
 ## v2.3.5
 - Fixed `IDownloadCoupons`
 
